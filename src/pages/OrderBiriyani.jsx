@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Loader2, Utensils, Share2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Loader2, Utensils, Download, MessageCircle } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import * as htmlToImage from 'html-to-image'
 
@@ -16,7 +16,7 @@ export default function OrderBiriyani() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedOrder, setSubmittedOrder] = useState(null)
   const [error, setError] = useState('')
-  const [isSharing, setIsSharing] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   
   const ticketRef = useRef(null)
 
@@ -29,12 +29,11 @@ export default function OrderBiriyani() {
     }))
   }
 
-  const handleShare = async () => {
+  const handleDownloadImage = async () => {
     if (!ticketRef.current) return
-    setIsSharing(true)
+    setIsDownloading(true)
     
     try {
-      // Small pause to let DOM paint completely before capture
       await new Promise(resolve => setTimeout(resolve, 150))
       
       const dataUrl = await htmlToImage.toPng(ticketRef.current, { 
@@ -43,27 +42,22 @@ export default function OrderBiriyani() {
         backgroundColor: '#ffffff'
       })
       
-      const blob = await (await fetch(dataUrl)).blob()
-      const file = new File([blob], `Order_${submittedOrder.id}.png`, { type: 'image/png' })
-
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: 'Food Fest Order Confirmation',
-          text: `My order #${submittedOrder.id} is confirmed for the St Marys Food Fest!`,
-          files: [file]
-        })
-      } else {
-        const link = document.createElement('a')
-        link.download = `Order_${submittedOrder.id}.png`
-        link.href = dataUrl
-        link.click()
-      }
+      const link = document.createElement('a')
+      link.download = `Order_${submittedOrder.id}.png`
+      link.href = dataUrl
+      link.click()
     } catch (err) {
       console.error('Failed to generate image', err)
-      alert("Failed to share the ticket. Please try taking a screenshot or try again.")
+      alert("Failed to download the ticket. Please try taking a screenshot.")
     } finally {
-      setIsSharing(false)
+      setIsDownloading(false)
     }
+  }
+
+  const handleShareToWhatsApp = () => {
+    const text = `*Food Fest Order Confirmation* 🍛\n\n*Name:* ${submittedOrder.name}\n*Order Number:* #${submittedOrder.id}\n*Item Name:* Chicken Biriyani\n*Count:* ${submittedOrder.count}\n*Total Cost:* ₹${submittedOrder.count * BIRIYANI_PRICE}\n\nSt Marys JSC Kundara`
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`
+    window.open(url, '_blank')
   }
 
   const handleSubmit = async (e) => {
@@ -151,7 +145,11 @@ export default function OrderBiriyani() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Biriyani Count</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Item Name</p>
+                <p className="text-primary-700 font-bold text-[1.05rem]">Chicken Biriyani</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Count</p>
                 <p className="text-gray-900 font-bold text-[1.05rem]">{submittedOrder.count}</p>
               </div>
             </div>
@@ -164,23 +162,34 @@ export default function OrderBiriyani() {
 
         {/* User Interactive Buttons (Excluded from Image Capture) */}
         <div className="max-w-md w-full mt-6 space-y-3 animate-fade-in" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-          <button
-            onClick={handleShare}
-            disabled={isSharing}
-            className="w-full flex items-center justify-center space-x-2 px-6 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100"
-          >
-            {isSharing ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin" />
-                <span>Generating Ticket...</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-5 h-5 mr-1" />
-                <span>Share</span>
-              </>
-            )}
-          </button>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={handleDownloadImage}
+              disabled={isDownloading}
+              className="flex-1 flex items-center justify-center space-x-2 px-4 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 mr-1" />
+                  <span>Download</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleShareToWhatsApp}
+              className="flex-1 flex items-center justify-center space-x-2 px-4 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-md active:scale-[0.98]"
+            >
+              <MessageCircle className="w-5 h-5 mr-1" />
+              <span>WhatsApp</span>
+            </button>
+          </div>
 
           <Link
             to="/foodfest"
