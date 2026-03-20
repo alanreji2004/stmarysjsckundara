@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Loader2, Utensils } from 'lucide-react'
 import { supabase } from '../services/supabase'
 
+const BIRIYANI_PRICE = 150
+
 export default function OrderBiriyani() {
   const [formData, setFormData] = useState({
     name: '',
@@ -11,8 +13,10 @@ export default function OrderBiriyani() {
     biriyani_count: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [orderNumber, setOrderNumber] = useState(null)
+  const [submittedOrder, setSubmittedOrder] = useState(null)
   const [error, setError] = useState('')
+
+  const totalCost = (parseInt(formData.biriyani_count) || 0) * BIRIYANI_PRICE
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -51,7 +55,12 @@ export default function OrderBiriyani() {
       if (supabaseError) throw supabaseError
 
       if (data && data.id) {
-        setOrderNumber(data.id)
+        setSubmittedOrder({
+          id: data.id,
+          name: formData.name,
+          address: formData.address,
+          count: parseInt(formData.biriyani_count)
+        })
       }
 
     } catch (err) {
@@ -61,36 +70,56 @@ export default function OrderBiriyani() {
     }
   }
 
-  if (orderNumber) {
+  if (submittedOrder) {
+    const finalCost = submittedOrder.count * BIRIYANI_PRICE
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-sm border border-gray-100 text-center space-y-8">
-          <div className="flex justify-center">
-            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="w-12 h-12 text-green-500" />
+        <div className="max-w-md w-full bg-white p-8 sm:p-10 rounded-3xl shadow-lg border border-gray-100 text-center space-y-8 animate-fade-in relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-primary-500" />
+          
+          <div className="space-y-2 pt-2">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-2">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Success!</h2>
+            <p className="text-gray-500 font-medium">Your pre-booking is confirmed.</p>
+          </div>
+          
+          <div className="bg-primary-50 py-8 px-6 rounded-2xl border border-primary-100 shadow-inner">
+            <p className="text-sm font-bold text-primary-600 uppercase tracking-widest mb-1">Order Number</p>
+            <p className="text-6xl font-black text-primary-700">#{submittedOrder.id}</p>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-left space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Customer Name</p>
+              <p className="text-gray-900 font-bold text-lg">{submittedOrder.name}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Address</p>
+              <p className="text-gray-700 font-medium">{submittedOrder.address}</p>
+            </div>
+            <div className="pt-4 border-t border-gray-200 flex justify-between items-end">
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Cost</p>
+              <p className="text-2xl font-black text-gray-900">₹{finalCost}</p>
             </div>
           </div>
-          <div className="space-y-3">
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Order Confirmed!</h2>
-            <p className="text-gray-500 text-lg">Your pre-booking has been recorded.</p>
+
+          <div className="pt-2">
+            <Link
+              to="/foodfest"
+              className="inline-flex w-full items-center justify-center px-6 py-3 border border-gray-200 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-sm active:scale-[0.98]"
+            >
+              Return to Menu
+            </Link>
           </div>
-          <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 shadow-inner">
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-3">Your Order Number</p>
-            <p className="text-6xl font-black text-primary-600">#{orderNumber}</p>
-          </div>
-          <Link
-            to="/foodfest"
-            className="inline-block pt-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
-          >
-            Return to Menu
-          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
       <div className="max-w-xl w-full space-y-8 bg-white p-8 sm:p-12 rounded-3xl shadow-sm border border-gray-100">
         
         <div className="flex items-center space-x-4 mb-4">
@@ -166,23 +195,35 @@ export default function OrderBiriyani() {
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="biriyani_count" className="block text-sm font-bold text-gray-800">
-                Biriyani Count <span className="font-normal text-gray-500 ml-1">(ബിരിയാണിയുടെ എണ്ണം)</span>
+              <label htmlFor="biriyani_count" className="flex justify-between items-center text-sm font-bold text-gray-800">
+                <span>Biriyani Count <span className="font-normal text-gray-500 ml-1">(ബിരിയാണിയുടെ എണ്ണം)</span></span>
               </label>
-              <input
-                id="biriyani_count"
-                type="number"
-                name="biriyani_count"
-                value={formData.biriyani_count}
-                onChange={handleChange}
-                min="1"
-                max="50"
-                placeholder="How many?"
-                className="input-field shadow-sm"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="biriyani_count"
+                  type="number"
+                  name="biriyani_count"
+                  value={formData.biriyani_count}
+                  onChange={handleChange}
+                  min="1"
+                  max="50"
+                  placeholder="How many?"
+                  className="input-field shadow-sm pr-20"
+                  required
+                />
+                <div className="absolute right-0 top-0 bottom-0 flex items-center pr-4 pointer-events-none">
+                  <span className="text-gray-400 text-sm font-medium">x ₹{BIRIYANI_PRICE}</span>
+                </div>
+              </div>
             </div>
           </div>
+
+          {totalCost > 0 && (
+            <div className="p-4 bg-primary-50 rounded-xl border border-primary-100 flex justify-between items-center animate-fade-in">
+              <span className="text-primary-800 font-semibold">ആകെ തുക (Total Cost)</span>
+              <span className="text-primary-700 font-black text-xl">₹{totalCost}</span>
+            </div>
+          )}
 
           <div className="pt-4">
             <button

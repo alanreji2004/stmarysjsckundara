@@ -15,3 +15,12 @@
       placeholder:text-gray-400 shadow-sm hover:border-gray-300;
   }
 }
+
+@keyframes fadeScaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeScaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
