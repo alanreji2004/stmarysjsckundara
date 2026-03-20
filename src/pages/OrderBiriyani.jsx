@@ -11,7 +11,7 @@ export default function OrderBiriyani() {
     biriyani_count: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [tokenNumber, setTokenNumber] = useState(null)
+  const [orderNumber, setOrderNumber] = useState(null)
   const [error, setError] = useState('')
 
   const handleChange = (e) => {
@@ -51,7 +51,7 @@ export default function OrderBiriyani() {
       if (supabaseError) throw supabaseError
 
       if (data && data.id) {
-        setTokenNumber(data.id)
+        setOrderNumber(data.id)
       }
 
     } catch (err) {
@@ -61,28 +61,28 @@ export default function OrderBiriyani() {
     }
   }
 
-  if (tokenNumber) {
+  if (orderNumber) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-6">
+        <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-sm border border-gray-100 text-center space-y-8">
           <div className="flex justify-center">
-            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
+            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center">
+              <CheckCircle2 className="w-12 h-12 text-green-500" />
             </div>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">Order Confirmed!</h2>
-            <p className="text-gray-500">Your pre-booking has been successfully recorded.</p>
+          <div className="space-y-3">
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Order Confirmed!</h2>
+            <p className="text-gray-500 text-lg">Your pre-booking has been recorded.</p>
           </div>
-          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Your Token Number</p>
-            <p className="text-5xl font-black text-primary-600">#{tokenNumber}</p>
+          <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 shadow-inner">
+            <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-3">Your Order Number</p>
+            <p className="text-6xl font-black text-primary-600">#{orderNumber}</p>
           </div>
           <Link
             to="/foodfest"
-            className="inline-block mt-4 text-primary-600 font-medium hover:text-primary-700 transition-colors"
+            className="inline-block pt-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
           >
-            Return to Home
+            Return to Menu
           </Link>
         </div>
       </div>
@@ -91,33 +91,35 @@ export default function OrderBiriyani() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-xl w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-gray-100">
+      <div className="max-w-xl w-full space-y-8 bg-white p-8 sm:p-12 rounded-3xl shadow-sm border border-gray-100">
         
-        <div className="flex items-center space-x-4 mb-2">
-          <Link to="/foodfest" className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="flex items-center space-x-4 mb-4">
+          <Link to="/foodfest" className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
+            <ArrowLeft className="w-6 h-6" />
           </Link>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Utensils className="w-6 h-6 text-primary-500" />
+            <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3 tracking-tight">
+              <Utensils className="w-7 h-7 text-primary-500" />
               Order Biriyani
             </h1>
           </div>
         </div>
         
-        <p className="text-gray-500 text-sm">
+        <p className="text-gray-500 text-base leading-relaxed">
           Fill in your details below to lock in your order. We'll keep it ready for you!
         </p>
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
-            {error}
+          <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100 flex items-center">
+            <div className="flex-1">{error}</div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-7 mt-6">
           <div className="space-y-2">
-            <label htmlFor="name" className="block text-sm font-semibold text-gray-700">Full Name</label>
+            <label htmlFor="name" className="block text-sm font-bold text-gray-800">
+              Name <span className="font-normal text-gray-500 ml-1">(പേര്)</span>
+            </label>
             <input
               id="name"
               type="text"
@@ -125,13 +127,15 @@ export default function OrderBiriyani() {
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter your name"
-              className="input-field"
+              className="input-field shadow-sm"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="address" className="block text-sm font-semibold text-gray-700">Address / Location</label>
+            <label htmlFor="address" className="block text-sm font-bold text-gray-800">
+              Address <span className="font-normal text-gray-500 ml-1">(വിലാസം)</span>
+            </label>
             <textarea
               id="address"
               name="address"
@@ -139,14 +143,16 @@ export default function OrderBiriyani() {
               onChange={handleChange}
               placeholder="Enter your complete address"
               rows="3"
-              className="input-field resize-none"
+              className="input-field shadow-sm resize-none"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
             <div className="space-y-2">
-              <label htmlFor="whatsapp" className="block text-sm font-semibold text-gray-700">WhatsApp Number</label>
+              <label htmlFor="whatsapp" className="block text-sm font-bold text-gray-800">
+                WhatsApp Number <span className="font-normal text-gray-500 ml-1">(വാട്സ്ആപ്പ് നമ്പർ)</span>
+              </label>
               <input
                 id="whatsapp"
                 type="tel"
@@ -154,13 +160,15 @@ export default function OrderBiriyani() {
                 value={formData.whatsapp}
                 onChange={handleChange}
                 placeholder="+91"
-                className="input-field"
+                className="input-field shadow-sm"
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="biriyani_count" className="block text-sm font-semibold text-gray-700">Quantity</label>
+              <label htmlFor="biriyani_count" className="block text-sm font-bold text-gray-800">
+                Biriyani Count <span className="font-normal text-gray-500 ml-1">(ബിരിയാണിയുടെ എണ്ണം)</span>
+              </label>
               <input
                 id="biriyani_count"
                 type="number"
@@ -170,26 +178,28 @@ export default function OrderBiriyani() {
                 min="1"
                 max="50"
                 placeholder="How many?"
-                className="input-field"
+                className="input-field shadow-sm"
                 required
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center space-x-2 px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Confirming Order...</span>
-              </>
-            ) : (
-              <span>Confirm & Generate Token</span>
-            )}
-          </button>
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center space-x-3 px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <span>Confirm Order</span>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
