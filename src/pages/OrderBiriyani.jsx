@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Loader2, Utensils } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Loader2, Utensils, Share2 } from 'lucide-react'
 import { supabase } from '../services/supabase'
+import * as htmlToImage from 'html-to-image'
 
 const BIRIYANI_PRICE = 150
 
@@ -15,6 +16,9 @@ export default function OrderBiriyani() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submittedOrder, setSubmittedOrder] = useState(null)
   const [error, setError] = useState('')
+  const [isSharing, setIsSharing] = useState(false)
+  
+  const ticketRef = useRef(null)
 
   const totalCost = (parseInt(formData.biriyani_count) || 0) * BIRIYANI_PRICE
 
@@ -23,6 +27,43 @@ export default function OrderBiriyani() {
       ...prev,
       [e.target.name]: e.target.value
     }))
+  }
+
+  const handleShare = async () => {
+    if (!ticketRef.current) return
+    setIsSharing(true)
+    
+    try {
+      // Small pause to let DOM paint completely before capture
+      await new Promise(resolve => setTimeout(resolve, 150))
+      
+      const dataUrl = await htmlToImage.toPng(ticketRef.current, { 
+        quality: 1, 
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
+      })
+      
+      const blob = await (await fetch(dataUrl)).blob()
+      const file = new File([blob], `Order_${submittedOrder.id}.png`, { type: 'image/png' })
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Food Fest Order Confirmation',
+          text: `My order #${submittedOrder.id} is confirmed for the St Marys Food Fest!`,
+          files: [file]
+        })
+      } else {
+        const link = document.createElement('a')
+        link.download = `Order_${submittedOrder.id}.png`
+        link.href = dataUrl
+        link.click()
+      }
+    } catch (err) {
+      console.error('Failed to generate image', err)
+      alert("Failed to share the ticket. Please try taking a screenshot or try again.")
+    } finally {
+      setIsSharing(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -74,15 +115,24 @@ export default function OrderBiriyani() {
     const finalCost = submittedOrder.count * BIRIYANI_PRICE
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white p-8 sm:p-10 rounded-3xl shadow-lg border border-gray-100 text-center space-y-8 animate-fade-in relative overflow-hidden">
+        
+        {/* Shareable Document Area */}
+        <div 
+          ref={ticketRef} 
+          className="max-w-md w-full bg-white p-8 sm:p-10 rounded-3xl shadow-lg border border-gray-100 text-center space-y-6 animate-fade-in relative overflow-hidden"
+        >
           <div className="absolute top-0 left-0 right-0 h-2 bg-primary-500" />
           
-          <div className="space-y-2 pt-2">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-2">
+          <div className="pt-2 pb-4 border-b border-gray-100 mb-2">
+            <h1 className="text-xl font-black text-gray-900 tracking-tight">St Marys JSC Kundara</h1>
+            <p className="text-sm font-medium text-gray-500 mt-1">Food Fest by St Marys Youth Association</p>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-2 shadow-sm">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Success!</h2>
-            <p className="text-gray-500 font-medium">Your pre-booking is confirmed.</p>
+            <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Order Confirmed!</h2>
           </div>
           
           <div className="bg-primary-50 py-8 px-6 rounded-2xl border border-primary-100 shadow-inner">
@@ -99,20 +149,45 @@ export default function OrderBiriyani() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Address</p>
               <p className="text-gray-700 font-medium">{submittedOrder.address}</p>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Biriyani Count</p>
+                <p className="text-gray-900 font-bold text-[1.05rem]">{submittedOrder.count}</p>
+              </div>
+            </div>
             <div className="pt-4 border-t border-gray-200 flex justify-between items-end">
               <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Cost</p>
               <p className="text-2xl font-black text-gray-900">₹{finalCost}</p>
             </div>
           </div>
+        </div>
 
-          <div className="pt-2">
-            <Link
-              to="/foodfest"
-              className="inline-flex w-full items-center justify-center px-6 py-3 border border-gray-200 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-sm active:scale-[0.98]"
-            >
-              Return to Menu
-            </Link>
-          </div>
+        {/* User Interactive Buttons (Excluded from Image Capture) */}
+        <div className="max-w-md w-full mt-6 space-y-3 animate-fade-in" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+          <button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="w-full flex items-center justify-center space-x-2 px-6 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            {isSharing ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span>Generating Ticket...</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-5 h-5 mr-1" />
+                <span>Share</span>
+              </>
+            )}
+          </button>
+
+          <Link
+            to="/foodfest"
+            className="inline-flex w-full items-center justify-center px-6 py-4 border border-gray-200 text-base font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-sm active:scale-[0.98]"
+          >
+            Return to Menu
+          </Link>
         </div>
       </div>
     )
