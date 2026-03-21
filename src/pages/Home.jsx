@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
+import bgImage from '../assets/background.webp';
 
 const Home = () => {
   return (
@@ -10,7 +11,7 @@ const Home = () => {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ 
-              backgroundImage: "url('/src/assets/background.jpg')"
+              backgroundImage: `url(${bgImage})`
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />

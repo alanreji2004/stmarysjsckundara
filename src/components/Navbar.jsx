@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, Send, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logoImage from '../assets/logo.webp';
 
 const NavItem = ({ title, hasDropdown }) => (
   <div className="flex items-center gap-1.5 cursor-pointer text-white hover:text-[#d49a42] transition-colors text-sm font-medium tracking-wide">
@@ -19,7 +20,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-3 sm:gap-4 shrink-0">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-200 shadow-sm">
               <img 
-                src="/src/assets/logo.png" 
+                src={logoImage} 
                 alt="Logo" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
